@@ -14,6 +14,44 @@ provider "aws" {
 resource "aws_instance" "backend" {
   ami           = "ami-0387ac14c76aca343" # trashmaster-backend-01
   instance_type = "t3.medium"
+  tags = {
+    Name = "TF-build-be-v01-02"
+  }
+}
+
+resource "aws_instance" "frontend" {
+  ami           = "ami-0ec10929233384c7f" # trashmaster-backend-01
+  instance_type = "t3.micro"
+  user_data = <<-EOF
+              #!/bin/bash
+set -e
+
+echo "Updating package lists..."
+sudo apt update
+
+echo "Upgrading installed packages..."
+# -y assumes 'yes' to all prompts
+sudo apt upgrade -y
+
+echo "System update and upgrade complete!"
+
+# install vs code via snap
+sudo snap install code --classic
+
+#install nodejs and npm
+sudo apt install nodejs npm
+
+# get latest versions
+sudo npm install -g n
+sudo n lts # Installs the latest Long-Term Support version
+
+# prepare frontend location
+mkdir trashmaster
+cd trashmaster
+              EOF
+  tags = {
+    Name = "TF-build-fe-v01-01"
+  }
 }
 
 resource "aws_s3_bucket" "ami_bucket" {
