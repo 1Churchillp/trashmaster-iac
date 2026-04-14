@@ -6,11 +6,11 @@ import os from "os";
 
 async function downloadFile() {
   const client = new S3Client({ region: "us-east-1" });
-  const desktopPath = path.join(os.homedir(), "Desktop", "downloaded-file.txt");
+  const desktopPath = path.join(os.homedir(), "Desktop", "downloaded-file.bin");
 
   const command = new GetObjectCommand({
     Bucket: "trashmaster-ami-backup-2026",
-    Key: "path/in/s3/file.txt",
+    Key: "ami-0387ac14c76aca343.bin",
   });
   try {
     const response = await client.send(command);
