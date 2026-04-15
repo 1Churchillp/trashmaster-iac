@@ -11,6 +11,30 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# Creating key-pair on AWS using SSH-public key
+resource "aws_key_pair" "deployer" {
+  key_name   = var.key-name
+  public_key = file("~/.local/bin/my-key.pub")
+}
+
+# Creating a security group to restrict/allow inbound connectivity
+resource "aws_security_group" "network-security-group" {
+  name        = var.network-security-group-name
+  description = "Allow TLS inbound traffic"
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] 
+  }
+  # Not recommended to add "0.0.0.0/0" instead we need to be more specific with the IP ranges to allow connectivity from.
+  tags = {
+    Name = "frontend-inbound"
+  }
+}
+
 resource "aws_instance" "backend" {
   ami           = "ami-0387ac14c76aca343" # trashmaster-backend-01
   instance_type = "t3.medium"
@@ -20,38 +44,21 @@ resource "aws_instance" "backend" {
 }
 
 resource "aws_instance" "frontend" {
-  ami           = "ami-0ec10929233384c7f" # trashmaster-backend-01
-  instance_type = "t3.micro"
+  ami           = var.ubuntu-ami
+  instance_type = var.ubuntu-instance-type
+  key_name        = aws_key_pair.deployer.key_name
+  vpc_security_group_ids = [aws_security_group.network-security-group.id]
   user_data = <<-EOF
               #!/bin/bash
               set -e
-
-              echo "Updating package lists..."
-              sudo apt update
-
-              echo "Upgrading installed packages..."
-              # -y assumes 'yes' to all prompts
-              sudo apt upgrade -y
-
-              echo "System update and upgrade complete!"
-
-              # install vs code via snap
-              sudo snap install code --classic
-
-              #install nodejs and npm
-              sudo apt install nodejs npm
-
-              # get latest versions
-              sudo npm install -g n
-              sudo n lts # Installs the latest Long-Term Support version
-
               # prepare frontend location
               mkdir trashmaster
               cd trashmaster
               EOF
               
+
   tags = {
-    Name = "TF-build-fe-v01-01"
+    Name = "TF-build-fe-v01-02"
   }
 }
 
