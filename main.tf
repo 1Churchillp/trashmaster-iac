@@ -27,7 +27,21 @@ resource "aws_security_group" "network-security-group" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] 
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
   # Not recommended to add "0.0.0.0/0" instead we need to be more specific with the IP ranges to allow connectivity from.
   tags = {
@@ -35,47 +49,40 @@ resource "aws_security_group" "network-security-group" {
   }
 }
 
-resource "aws_instance" "backend" {
-  ami           = "ami-0387ac14c76aca343" # trashmaster-backend-01
-  instance_type = "t3.medium"
-  tags = {
-    Name = "TF-build-be-v01-02"
-  }
-}
+#resource "aws_instance" "backend" {
+#  ami           = "ami-0387ac14c76aca343" # trashmaster-backend-01
+#  instance_type = "t3.medium"
+#  tags = {
+#    Name = "TF-build-be-v01-02"
+#  }
+#}
 
 resource "aws_instance" "frontend" {
-  ami           = var.ubuntu-ami
-  instance_type = var.ubuntu-instance-type
-  key_name        = aws_key_pair.deployer.key_name
+  ami                    = var.ubuntu-ami
+  instance_type          = var.ubuntu-instance-type
+  key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.network-security-group.id]
-  user_data = <<-EOF
-              #!/bin/bash
-              set -e
-              # prepare frontend location
-              mkdir trashmaster
-              cd trashmaster
-              EOF
-              
+  user_data              = file("./scripts/frontend_setup.sh")
 
   tags = {
     Name = "TF-build-fe-v01-02"
   }
 }
 
-resource "aws_s3_bucket" "ami_bucket" {
-  bucket = "trashmaster-ami-backup-2026" # Must be globally unique
+#resource "aws_s3_bucket" "ami_bucket" {
+#  bucket = "trashmaster-ami-backup-2026" # Must be globally unique
+#
+#  tags = {
+#    Name        = "Ami Bucket"
+#    Environment = "Dev"
+#  }
+#}
 
-  tags = {
-    Name        = "Ami Bucket"
-    Environment = "Dev"
-  }
-}
+#resource "aws_s3_bucket_public_access_block" "block_public" {
+#  bucket = aws_s3_bucket.ami_bucket.id
 
-resource "aws_s3_bucket_public_access_block" "block_public" {
-  bucket = aws_s3_bucket.ami_bucket.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
+#  block_public_acls       = true
+#  block_public_policy     = true
+#  ignore_public_acls      = true
+#  restrict_public_buckets = true
+#}
