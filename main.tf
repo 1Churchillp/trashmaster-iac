@@ -62,8 +62,20 @@ resource "aws_instance" "frontend" {
   instance_type          = var.ubuntu-instance-type
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.network-security-group.id]
-  user_data              = file("./scripts/frontend_setup.sh")
 
+  user_data = <<-EOF
+              #!/bin/bash
+              set -e
+              # prepare frontend location
+              apt update && apt upgrade -y
+
+              mkdir /home/ubuntu/trashmaster
+              snap install code --classic
+              mkdir /home/ubuntu/trashmaster2
+              apt install npm -y
+              apt install nodejs -y
+              mkdir /home/ubuntu/trashmaster3
+              EOF
   tags = {
     Name = "TF-build-fe-v01-02"
   }
