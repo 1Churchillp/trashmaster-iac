@@ -67,13 +67,32 @@ resource "aws_instance" "frontend" {
               #!/bin/bash
               set -e
               # prepare frontend location
+              echo "Updating package lists..."
               apt update && apt upgrade -y
 
               mkdir /home/ubuntu/trashmaster
               snap install code --classic
               mkdir /home/ubuntu/trashmaster2
-              apt install npm -y
+              
               apt install nodejs -y
+              apt install npm -y
+
+              npm install -g n
+              n lts
+
+              hash -r
+              
+              # then install nvm
+              # touch ~/.bashrc
+              # curl -L -o /home/ubuntu/install.sh https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh
+              # chmod +x /home/ubuntu/install.sh && /home/ubuntu/install.sh
+
+              # curl -v http://example.com >> /var/log/startup_curl.log
+              # curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+              # export NVM_DIR="$HOME/.nvm"
+              # [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+              # [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+              # nvm install --lts
               mkdir /home/ubuntu/trashmaster3
               EOF
   tags = {
